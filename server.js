@@ -12,6 +12,14 @@ var config = require('config');
 var app = express();
 var port = process.env.PORT || 3000;
 
+var bodyParser = require('body-parser')
+app.use(bodyParser.json() );       // to support JSON-encoded bodies
+app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
+  extended: true
+})); 
+
+
+
 // Connect to mongodb
 var connect = function () {
   var options = { server: { socketOptions: { keepAlive: 1 } } };
@@ -38,3 +46,4 @@ require('./config/routes')(app, passport);
 
 app.listen(port);
 console.log('Express app started on port ' + port);
+

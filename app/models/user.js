@@ -4,51 +4,31 @@
  */
 
 var mongoose = require('mongoose');
-var userPlugin = require('mongoose-user');
-var Schema = mongoose.Schema;
+var Schema = mongoose.Schema,
+	ObjectId = Schema.ObjectId;
 
 /**
  * User schema
  */
 
 var UserSchema = new Schema({
-  name: { type: String, default: '' },
-  email: { type: String, default: '' },
-  hashed_password: { type: String, default: '' },
-  salt: { type: String, default: '' }
-});
-
-/**
- * User plugin
- */
-
-UserSchema.plugin(userPlugin, {});
-
-/**
- * Add your
- * - pre-save hooks
- * - validations
- * - virtuals
- */
-
-/**
- * Methods
- */
-
-UserSchema.method({
+  
+  facebookId: String,
+  displayName: String,
+  username: String,
+  provider: String,
+	
+  about: String,
+  age: Number,
+  like: Number,
+  workplace: String,
+  favorite: [String],
+  friends: [{friendId: ObjectId}],
+  notification: [ {date: {type: Date,default: Date.now} ,title: String ,checked: Boolean} ],
+  achievement: [ {date: Date ,title: String ,checked: Boolean} ],
 
 });
 
-/**
- * Statics
- */
+module.exports = mongoose.model('User', UserSchema);
 
-UserSchema.static({
 
-});
-
-/**
- * Register
- */
-
-mongoose.model('User', UserSchema);

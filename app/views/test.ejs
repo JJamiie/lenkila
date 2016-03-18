@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+<head>
+
+</head>
+<body>
+
+	<a href="/auth/facebook">Log In with Facebook</a>
+	<a href="/getProfile/56ea2b26db170c37f79655c5">Get profile</a>
+	<div>
+		<form action="/addEvent" method="post">
+			<input type="text" name="test" placeholder="test">
+			<input type="hidden" name="_csrf" value="<%= csrf %>">
+			<button type="submit">test</button>
+			
+		</form>
+	</div>
+</body>
+</html>

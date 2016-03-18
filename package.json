@@ -1,10 +1,10 @@
 {
-  "name": "node-express-mongoose",
+  "name": "Lenkila",
   "description": "A boilerplate application for express mongoose",
   "version": "1.0.0",
   "author": {
-    "name": "Madhusudhan Srinivasa",
-    "email": "me@madhums.me"
+    "name": "Kuladech Rashataprucksa",
+    "email": "jjamie_08@hotmail.com"
   },
   "engines": {
     "node": "0.12.x"
