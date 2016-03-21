@@ -15,7 +15,6 @@ var EventSchema = new Schema({
   createdId: ObjectId,
   joinPerson: [ObjectId],
   maxPerson: Number,
-  price: Number,
   place: String,
   description: String,
   latitude: Number,

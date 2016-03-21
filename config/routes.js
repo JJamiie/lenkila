@@ -100,9 +100,7 @@ module.exports = function (app, passport) {
   app.post('/addEvent', function(req, res){
     var event = Event({
       createdId: req.message.userId,
-      joinPerson: req.message.userId,
       maxPerson: req.message.maxPerson,
-      price: req.message.price,
       place: req.message.place,
       description: req.message.description,
       latitude: req.message.latitude,
