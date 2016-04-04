@@ -3,10 +3,13 @@
 // import module dependencies
 var mongoose = require('mongoose');
 var home = require('home');
+var fs = require('fs');
+var Schema = mongoose.Schema;
 var bodyParser = require('body-parser'); // can read JSON
 var csrf = require('csurf');
 var passport = require('passport')
   , FacebookStrategy = require('passport-facebook').Strategy;
+
 
 
 //import database
@@ -43,6 +46,7 @@ module.exports = function (app, passport) {
             displayName: profile.displayName,
             username: profile.username,
             provider: profile.provider,
+            about: "",
           });
           user.save(function(err){
             if(err) console.log(err);
@@ -79,49 +83,249 @@ module.exports = function (app, passport) {
         });
   });
 
-  app.get('/getProfile/:userId',function(req,res){
-    var userId = req.params.userId
-    User.findOne({_id: userId},function(err,user){
-      if(err){
-        return done(err)
-      }
-      res.send(user)
-    })
-  });
+  app.get('/getProfile/:facebookId',function(req,res){
+    var userId = req.params.facebookId;
+    console.log(userId);
+    User.findOne({facebookId: userId},
+      function(err,user){
 
+      if(err){
+        return done(err);
+      }else{
+      console.log(user);
+      res.send(user);
+    }
+    });
+  });
   ////////////////////////////////////    REQUEST CSRF    ////////////////////////////////////
   
   app.get('/requestCsrf', function(req,res){
     res.send(req.csrfToken());
   });
-
   ////////////////////////////////////    EVENT    ////////////////////////////////////
+  app.post('/addNewNotification',function(req,res){
+    // console.log(req.body.noti.title);
+    console.log(req.body.noti.user_id);
+    var title = req.body.noti.title;
+    var date  = req.body.noti.date;
+    var name = req.body.noti.name;
+    var image = req.body.noti.image;
+    var eventId = req.body.noti.eventId;
+    var notification = {date:date,name:name,title:title,image:image,eventID:eventId};
 
-  app.post('/addEvent', function(req, res){
-    var event = Event({
-      createdId: req.message.userId,
-      maxPerson: req.message.maxPerson,
-      place: req.message.place,
-      description: req.message.description,
-      latitude: req.message.latitude,
-      longitude: req.message.longitude,
-      startTime: req.message.startTime,
-      finishTime: req.message.finishTime,
-      type: req.message.type
-    });
-
-    event.save(function(err, group) {
-      if(err) throw err;
-    });
-    res.redirect('/');
-  });
-
-  app.post('/joinEvent',function(req,res){
-    Event.findByIdAndUpdate(req.message.eventId,
-        {$push: {"joinPerson": req.message.userId}},
+    // User.findOne({facebookId:req.body.noti.user_id},function(err,user){
+    //     console.log(user);
+    // });
+  console.log(notification);
+    User.findOne({facebookId:req.body.noti.user_id},function(err,user){
+      console.log(user);
+      user.update({$push: { "newNotification": notification}},
         {safe: true, upsert: true}, function(err, user){
+          if(err){
+            console.log("error");
+          }else{
+          res.redirect('/');  
+        }
+        });
+    });
+        
+});
+  app.post('/addNotification',function(req,res){
+    // console.log(req.body.noti.title);
+    console.log(req.body.noti.user_id);
+    var title = req.body.noti.title;
+    var date  = req.body.noti.date;
+    var name = req.body.noti.name;
+    var image = req.body.noti.image;
+    var eventId = req.body.noti.eventId;
+    var notification = {date:date,name:name,title:title,image:image,eventID:eventId};
+
+    // User.findOne({facebookId:req.body.noti.user_id},function(err,user){
+    //     console.log(user);
+    // });
+  console.log(notification);
+    User.findOne({facebookId:req.body.noti.user_id},function(err,user){
+      user.update({$push: { "notification": notification}},
+        {safe: true, upsert: true}, function(err, user){
+          if(err){
+            console.log("error");
+          }else{
+          res.redirect('/');  
+        }
+        });
+    });
+        
+});
+  app.post('/removeNewNotification',function(req,res){
+    // console.log(req.body.noti.title);
+    // User.findOne({facebookId:req.body.noti.user_id},function(err,user){
+    //     console.log(user);
+    // });
+    User.findOne({facebookId:req.body.noti.user_id},function(err,user){
+      user.update({$pop: { "newNotification": -1}},
+        {safe: true, upsert: true}, function(err, user){
+          if(err){
+            console.log("error");
+          }else{
+          res.redirect('/');  
+        }
+        });
+    });
+        
+});
+  app.post('/removePlayer',function(req,res){
+    Event.findOne(req.body.message.eventId,function(err,event){
+
+      event.update({$pull:{joinPerson:{user_id:req.body.message.user_id}}},function(err,event){
+          if(err){
+            console.log("error");
+          }else{
+            console.log("sdsd");
+            res.redirect('/'); 
+          }
+    });
+  });
+  });
+  app.post('/removeEvent',function(req,res){
+    console.log("sdsd")
+    Event.remove({_id:req.body.message.eventId},function(err,event){
+      if(err){
+        console.log(err);
+      }else{
+        console.log(event);
+        res.redirect('/');
+      }
+    });
+  });
+  app.post('/addEvent', function(req, res){
+    console.log(req);
+    var event = Event({
+      createdId: req.body.message.createdId,
+      maxPerson: req.body.message.maxPerson,
+      place: req.body.message.place,
+      description: req.body.message.description,
+      latitude: req.body.message.latitude,
+      longitude: req.body.message.longitude,
+      startTime: req.body.message.startTime,
+      finishTime: req.body.message.finishTime,
+      type: req.body.message.type,
+      author: req.body.message.author,
+      price: req.body.message.price,
+      image: req.body.message.image,
+      bg: req.body.message.bg,
+      pic: req.body.message.pic,
+      joinPerson: req.body.message.joinPerson
+    });
+    event.save(function(err){
+            if(err){ console.log(err);}
+else{
+    console.log(event);
+    res.redirect('/');
+  }
+});
+});
+app.post('/addUser',function(req,res){
+  console.log(req);
+  var user = User({
+    facebookId: req.body.message.facebookId,
+    displayName: req.body.message.displayName,
+    friends: req.body.message.friends,
+    about:"add about me",
+    notification:req.body.message.noti,
+    newNotification:req.body.message.noti,
+    provider:"facebook"
+  });
+  user.save(function(err){
+      if(err){console.log(err)}
+      else{
+        console.log(user);
+        res.redirect('/');
+      }
+  });
+});
+app.post('/addAchievement',function(req,res){
+  console.log("sds");
+  console.log(req.body.message.title);
+  var title = req.body.message.title;
+  var date = req.body.message.date;
+  var checked = req.body.message.checked;
+  var achievement = {date:date,title:title,checked:checked}
+  User.findOne({facebookId:req.body.message.user_id},function(err,user){
+    console.log(user);
+    User.update({$push:{"achievement":achievement}},function(err,user){
+      if(err){
+        console.log(err);
+      }else{
+        console.log(user);
+        res.redirect('/');
+      }
+    });
+  });
+});
+app.post('addOther',function(req,res){
+  User.findOne({facebookId:req.body.message.user_id},function(err,user){
+
+  });
+});
+app.post('/addNewNotification',function(req,res){
+    // console.log(req.body.noti.title);
+    console.log(req.body.noti.user_id);
+    var title = req.body.noti.title;
+    var date  = req.body.noti.date;
+    var name = req.body.noti.name;
+    var image = req.body.noti.image;
+    var eventId = req.body.noti.eventId;
+    var notification = {date:date,name:name,title:title,image:image,eventID:eventId};
+
+    // User.findOne({facebookId:req.body.noti.user_id},function(err,user){
+    //     console.log(user);
+    // });
+  console.log(notification);
+    User.findOne({facebookId:req.body.noti.user_id},function(err,user){
+      console.log(user);
+      user.update({$push: { "newNotification": notification}},
+        {safe: true, upsert: true}, function(err, user){
+          if(err){
+            console.log("error");
+          }else{
+          res.redirect('/');  
+        }
+        });
+    });
+        
+});
+  app.get('/searchEvent/:type',function(req,res){
+    Event.find({type:{$regex:'.*'+req.params.type+'.*'}},
+      function(err,event){
+        if(err){
+          console.log(err);
+        }else{
+          console.log(event);
+          res.send(event);
+        }
+      });
+  });
+  app.get('/updatePlayer/:eventId',function(req,res){
+    console.log(req.params.eventId);
+    Event.findOne({_id:req.params.eventId },
+      function(error,event){
+      if(error){
+        console.log(error);
+      }else{
+      console.log(event);
+      res.send(event);
+    }
+    });
+  });
+  app.post('/joinEvent',function(req,res){
+    Event.findByIdAndUpdate(req.body.message.eventId,
+        {$push: { "joinPerson": req.body.message.user_id}},
+        {safe: true, upsert: true}, function(err, user){
+          console.log(req.body.message.user_id);
+          console.log(req.body.message.eventId);
           res.redirect('/');  
         });
+    
   });
 
   app.get('/deleteEvent',function(req,res){
@@ -130,16 +334,19 @@ module.exports = function (app, passport) {
     });
   });
 
-  app.get('/getEvent/:eventId',function(req,res){
-    var userId = req.params.eventId
-    Event.findOne({_id: userId},function(err,event){
+  app.get('/getEvent',function(req,res){
+    var isodate = new Date()
+    isodate.setHours(isodate.getHours()+7)
+    Event.find({startTime: {$gte: isodate}},
+      function(err,event){
       if(err){
-        return done(err)
-      }
-      res.send(event)
-    })
+        console.log(err);
+      }else{
+      console.log(event);
+      res.send(event);
+    }
+    }).sort({startTime:1});
   });
-
   ////////////////////////////////////    TEST    ////////////////////////////////////
   app.get('/', home.index);
 

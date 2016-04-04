@@ -12,8 +12,8 @@ var Schema = mongoose.Schema,
  */
 
 var EventSchema = new Schema({
-  createdId: ObjectId,
-  joinPerson: [ObjectId],
+  createdId: String,
+  joinPerson: [String],
   maxPerson: Number,
   place: String,
   description: String,
@@ -21,7 +21,12 @@ var EventSchema = new Schema({
   longitude: Number,
   startTime: { type: Date, default: Date.now },
   finishTime: Date,
-  type: String
+  type: String,
+  author: String,
+  price: Number,
+  image: String,
+  bg: String,
+  pic: String,
 });
 
 module.exports = mongoose.model('Event', EventSchema);
