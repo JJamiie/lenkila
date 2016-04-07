@@ -72,16 +72,6 @@ module.exports = function (app, passport) {
     res.redirect('/')
   });
 
-  app.post('/addFriend',function(req,res){
-    User.findByIdAndUpdate(req.message.userId,
-        {$push: {"friends": req.message.friendId}},
-        {safe: true, upsert: true}, function(err, user){
-          if(err){
-            return done(err)
-          }
-          res.redirect('/');  
-        });
-  });
 
   app.get('/getProfile/:facebookId',function(req,res){
     var userId = req.params.facebookId;
@@ -210,8 +200,19 @@ module.exports = function (app, passport) {
     });
   });
   });
+  app.post('/removeFriend',function(req,res){
+    User.findOne({facebookId:req.body.message.facebookId},function(err,user){
+      user.update({$pull:{friends:{user_id:req.body.message.user_id}}},function(err,user){
+          if(err){
+            console.log("error");
+          }else{
+            console.log(user);
+            res.redirect('/'); 
+          }
+    });
+  });
+  });
   app.post('/removeEvent',function(req,res){
-    console.log("sdsd")
     Event.remove({_id:req.body.message.eventId},function(err,event){
       if(err){
         console.log(err);
@@ -254,7 +255,6 @@ app.post('/addUser',function(req,res){
   var user = User({
     facebookId: req.body.message.facebookId,
     displayName: req.body.message.displayName,
-    friends: req.body.message.friends,
     about:"add about me",
     notification:req.body.message.noti,
     newNotification:req.body.message.noti,
@@ -340,7 +340,18 @@ app.post('/addNewNotification',function(req,res){
     });
         
 });
-
+app.post('/addFriend',function(req,res){
+    User.findOne({facebookId:req.body.message.facebookId},function(err,user){
+    user.update({$push: { "friends": {"user_id":req.body.message.user_id}}},
+        {safe: true, upsert: true}, function(err, user){
+          if(err){
+            console.log(err);
+          }else{
+          res.redirect('/');  
+        }
+        });
+    });
+  });
 
 
 
@@ -377,6 +388,7 @@ app.post('/addNewNotification',function(req,res){
         });
     
   });
+  
   app.get('/deleteEvent',function(req,res){
     Event.findOne({_id: req.message.eventId}).remove(function(err){
         res.redirect('/');

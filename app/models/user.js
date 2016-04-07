@@ -22,7 +22,7 @@ var UserSchema = new Schema({
   love: [String],
   workplace: String,
   favorite: [String],
-  friends: [String],
+  friends: [{"user_id":String}],
   notification: {date: Date ,name: String,title: String ,image: String,eventID: String},
   newNotification: {date: Date ,name: String,title: String ,image: String,eventID: String},
   achievement: {date: Date ,title: String ,checked: Boolean},
