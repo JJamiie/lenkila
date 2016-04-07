@@ -13,7 +13,7 @@ var Schema = mongoose.Schema,
 
 var EventSchema = new Schema({
   createdId: String,
-  joinPerson: [String],
+  joinPerson: [{user_id:String}],
   maxPerson: Number,
   place: String,
   description: String,

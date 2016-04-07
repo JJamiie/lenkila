@@ -97,6 +97,16 @@ module.exports = function (app, passport) {
     }
     });
   });
+  app.get('/getEvent/:eventID',function(req,res){
+    Event.findOne({_id:req.params.eventID},function(err,event){
+      if(err){
+        console.log(err);
+      }else{
+        console.log(event);
+        res.send(event);
+      }
+    });
+  });
   ////////////////////////////////////    REQUEST CSRF    ////////////////////////////////////
   
   app.get('/requestCsrf', function(req,res){
@@ -130,6 +140,19 @@ module.exports = function (app, passport) {
     });
         
 });
+  app.post('/addAboutme',function(req,res){
+    console.log(req.body.message.user_id);
+    User.findOne({facebookId:req.body.message.user_id},function(err,user){
+      console.log(user);
+      user.update({"about":req.body.message.about},function(err,user){
+        if(err){
+          console.log(err);
+        }else{
+          res.redirect('/');
+        }
+      });
+    });
+  });
   app.post('/addNotification',function(req,res){
     // console.log(req.body.noti.title);
     console.log(req.body.noti.user_id);
@@ -144,17 +167,16 @@ module.exports = function (app, passport) {
     //     console.log(user);
     // });
   console.log(notification);
-    User.findOne({facebookId:req.body.noti.user_id},function(err,user){
-      user.update({$push: { "notification": notification}},
-        {safe: true, upsert: true}, function(err, user){
+      User.update({facebookId:req.body.noti.user_id},
+        {$push: { notification: notification}},
+      function(err, user){
+        console.log(user);
           if(err){
             console.log("error");
           }else{
           res.redirect('/');  
         }
         });
-    });
-        
 });
   app.post('/removeNewNotification',function(req,res){
     // console.log(req.body.noti.title);
@@ -174,13 +196,15 @@ module.exports = function (app, passport) {
         
 });
   app.post('/removePlayer',function(req,res){
-    Event.findOne(req.body.message.eventId,function(err,event){
-
+    console.log(req.body.message.eventId);
+    Event.findOne({_id:req.body.message.eventId},function(err,event){
+      console.log(req.body.message.user_id);
+      console.log(event);
       event.update({$pull:{joinPerson:{user_id:req.body.message.user_id}}},function(err,event){
           if(err){
             console.log("error");
           }else{
-            console.log("sdsd");
+            console.log(event);
             res.redirect('/'); 
           }
     });
@@ -226,6 +250,7 @@ else{
 });
 app.post('/addUser',function(req,res){
   console.log(req);
+  var favorite = ["default","default","default"];
   var user = User({
     facebookId: req.body.message.facebookId,
     displayName: req.body.message.displayName,
@@ -233,7 +258,8 @@ app.post('/addUser',function(req,res){
     about:"add about me",
     notification:req.body.message.noti,
     newNotification:req.body.message.noti,
-    provider:"facebook"
+    provider:"facebook",
+    favorite:favorite
   });
   user.save(function(err){
       if(err){console.log(err)}
@@ -243,6 +269,26 @@ app.post('/addUser',function(req,res){
       }
   });
 });
+app.post('/addReceipt',function(req,res){
+  var date = req.body.message.date;
+  var price = req.body.message.price;
+  var place = req.body.message.place;
+  var name = req.body.message.name;
+  var event = req.body.message.event;
+  var receipt = {date:date,price:price,place:place,name:name,event:event};
+  //console.log(receipt);
+    User.findOne({facebookId:req.body.message.user_id},function(err,user){
+      //console.log(user);
+      user.update({$push:{"receipt":receipt}},function(err,user){
+        if (err){
+          console.log(err);
+        }else{
+          console.log(user);
+          res.redirect('/');
+        }
+      });
+    });
+  });
 app.post('/addAchievement',function(req,res){
   console.log("sds");
   console.log(req.body.message.title);
@@ -252,7 +298,7 @@ app.post('/addAchievement',function(req,res){
   var achievement = {date:date,title:title,checked:checked}
   User.findOne({facebookId:req.body.message.user_id},function(err,user){
     console.log(user);
-    User.update({$push:{"achievement":achievement}},function(err,user){
+    user.update({$push:{"achievement":achievement}},function(err,user){
       if(err){
         console.log(err);
       }else{
@@ -294,6 +340,10 @@ app.post('/addNewNotification',function(req,res){
     });
         
 });
+
+
+
+
   app.get('/searchEvent/:type',function(req,res){
     Event.find({type:{$regex:'.*'+req.params.type+'.*'}},
       function(err,event){
@@ -319,7 +369,7 @@ app.post('/addNewNotification',function(req,res){
   });
   app.post('/joinEvent',function(req,res){
     Event.findByIdAndUpdate(req.body.message.eventId,
-        {$push: { "joinPerson": req.body.message.user_id}},
+        {$push: { "joinPerson": {"user_id":req.body.message.user_id}}},
         {safe: true, upsert: true}, function(err, user){
           console.log(req.body.message.user_id);
           console.log(req.body.message.eventId);
@@ -327,7 +377,6 @@ app.post('/addNewNotification',function(req,res){
         });
     
   });
-
   app.get('/deleteEvent',function(req,res){
     Event.findOne({_id: req.message.eventId}).remove(function(err){
         res.redirect('/');
@@ -354,7 +403,7 @@ app.post('/addNewNotification',function(req,res){
         res.render('test.ejs', { csrf: req.csrfToken() });
   });
 
-  
+    
 
   ////////////////////////////////////    ERROR HANDLING    ////////////////////////////////////
   app.use(function (err, req, res, next) {
